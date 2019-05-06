@@ -11,7 +11,7 @@ class SliceFunction(Function):
         ctx.save_for_backward(guide)
 
         _, ch, cw, cd, cc = coeff.size()
-        _, gh, gw = coeff.size()
+        _, gh, gw = guide.size()
 
         i = torch.arange(ch, dtype=torch.float32)
         j = torch.arange(cw, dtype=torch.float32)
@@ -43,7 +43,7 @@ class SliceFunction(Function):
         coeff, guide = ctx.saved_tensors()
 
         _, ch, cw, cd, cc = ctx.coeff.size()
-        _, gh, gw = ctx.coeff.size()
+        _, gh, gw = ctx.guide.size()
 
         i = torch.arange(ch, dtype=torch.float32)
         j = torch.arange(cw, dtype=torch.float32)
