@@ -6,8 +6,9 @@
 
 torch::Tensor slice_cuda_forward(torch::Tensor coeff, torch::Tensor guide);
 
-std::vector<torch::Tensor> slice_cuda_backward(
-    torch::Tensor grad_sliced, torch::Tensor ceoff torch::Tensor guide);
+std::vector<torch::Tensor> slice_cuda_backward(torch::Tensor grad_sliced,
+                                               torch::Tensor ceoff,
+                                               torch::Tensor guide);
 
 // C++ interface
 
@@ -19,8 +20,7 @@ std::vector<torch::Tensor> slice_cuda_backward(
   CHECK_CUDA(x);       \
   CHECK_CONTIGUOUS(x)
 
-std::vector<torch::Tensor> slice_forward(torch::Tensor coeff,
-                                         torch::Tensor guide) {
+torch::Tensor slice_forward(torch::Tensor coeff, torch::Tensor guide) {
   CHECK_INPUT(coeff);
   CHECK_INPUT(guide);
 
