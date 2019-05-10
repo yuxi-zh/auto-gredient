@@ -1,0 +1,5 @@
+.vscode/*
+.VSCodeCounter/*
+pytorch/build/*
+pytorch/dist/*
+pytorch/slice.egg-info/*
