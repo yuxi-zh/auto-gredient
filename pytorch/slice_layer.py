@@ -90,7 +90,7 @@ class SliceFunctionBasedCuda(Function):
 
 def main(argv):
 
-    batch, height, width = argv[1], argv[2], argv[3]
+    batch, height, width = int(argv[1]), int(argv[2]), int(argv[3])
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     coeff = torch.randn(batch, 16, 16, 8, 12,
@@ -99,12 +99,12 @@ def main(argv):
                         device=device, requires_grad=True)
     grad_output = torch.randn(batch, height, width, 12, device=device)
 
-    SliceFunctionApply = SliceFunction.apply
-    with torch.autograd.profiler.profile(use_cuda=True) as profiler:
-        for _ in range(10):
-            output = SliceFunctionApply(coeff, guide)
-            output.backward(grad_output)
-    print(profiler.key_averages())
+    # SliceFunctionApply = SliceFunction.apply
+    # with torch.autograd.profiler.profile(use_cuda=True) as profiler:
+    #     for _ in range(10):
+    #         output = SliceFunctionApply(coeff, guide)
+    #         output.backward(grad_output)
+    # print(profiler.key_averages())
 
     SliceFunctionBasedCudaApply = SliceFunctionBasedCuda.apply
     with torch.autograd.profiler.profile(use_cuda=True) as profiler:
@@ -115,4 +115,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    print(sys.argv)
     main(sys.argv)

@@ -296,7 +296,7 @@ std::vector<torch::Tensor> slice_cuda_backward(torch::Tensor grad_slice,
             guide.accessor(3), grad_slice.accessor(4), grad_coeff.accessor(5));
       }));
 
-  const dim3 blocks1(guide.size(1), guide.size(2), guide.size(0));
+  const dim3 blocks1(guide.size(1) / 8, guide.size(2) / 8, guide.size(0));
   const dim3 threads1(8, 8);
   AT_DISPATCH_FLOATING_TYPES(
       grad_slice.type(), "slice_cuda_backward_grad_guide", ([&] {
