@@ -1,5 +1,5 @@
+#include <chrono>
 #include <torch/extension.h>
-
 #include <vector>
 
 // CUDA forward declarations
@@ -12,15 +12,16 @@ std::vector<torch::Tensor> slice_cuda_backward(torch::Tensor grad_sliced,
 
 // C++ interface
 
-#define CHECK_CUDA(x) \
+#define CHECK_CUDA(x)                                                          \
   AT_ASSERTM(x.type().is_cuda(), #x " must be a CUDA tensor")
-#define CHECK_CONTIGUOUS(x) \
+#define CHECK_CONTIGUOUS(x)                                                    \
   AT_ASSERTM(x.is_contiguous(), #x " must be contiguous")
-#define CHECK_INPUT(x) \
-  CHECK_CUDA(x);       \
+#define CHECK_INPUT(x)                                                         \
+  CHECK_CUDA(x);                                                               \
   CHECK_CONTIGUOUS(x)
 
 torch::Tensor slice_forward(torch::Tensor coeff, torch::Tensor guide) {
+  // std::cout << "slice_forward is called!" << std::endl;
   CHECK_INPUT(coeff);
   CHECK_INPUT(guide);
 
@@ -30,6 +31,9 @@ torch::Tensor slice_forward(torch::Tensor coeff, torch::Tensor guide) {
 std::vector<torch::Tensor> slice_backward(torch::Tensor grad_sliced,
                                           torch::Tensor ceoff,
                                           torch::Tensor guide) {
+
+  // std::cout << "slice_backward is called!" << std::endl;
+
   CHECK_INPUT(grad_sliced);
   CHECK_INPUT(ceoff);
   CHECK_INPUT(guide);
