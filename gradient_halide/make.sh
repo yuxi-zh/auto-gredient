@@ -1,0 +1,2 @@
+g++ -std=c++11 -I /root/gradient-halide/include/ -I /root/gradient-halide/tools/ -I /root/gradient-halide/apps/support/ -g -fno-rtti slice_generator.cpp /root/gradient-halide/lib/libHalide.a /root/gradient-halide/tools/GenGen.cpp  -o slice_layer.generator -ldl -lpthread -lz -lcurses
+./slice_layer.generator -g slice_layer -f slice_layer -o . -r slice_layer -e pytorch_wrapper,static_library,h,stmt target=x86-64-windows-cuda-cuda_capability_61
