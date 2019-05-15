@@ -3,11 +3,9 @@
 #include <fstream>
 #include <vector>
 
-
 using namespace Halide;
 
 int main(int argc, char **argv) {
-
   int batch = atoi(argv[1]), height = atoi(argv[2]), width = atoi(argv[3]);
 
   Buffer<float> guide(batch, height, width, "guide");
@@ -34,15 +32,28 @@ int main(int argc, char **argv) {
   SimpleAutoscheduleOptions options;
   options.gpu = true;
 
-  std::vector<Func> grad_guide_and_coeff = {grad_guide, grad_coeff};
+  std::vector<Func> output_funcs = {affine, grad_guide, grad_coeff};
 
-  simple_autoschedule(grad_guide_and_coeff, {},
-                      {{{0, batch - 1}, {0, height - 1}, {0, width - 1}},
-                       {{0, batch - 1}, {0, 15}, {0, 15}, {0, 7}, {0, 11}}},
-                      options);
+  simple_autoschedule(
+      output_funcs, {},
+      {{{0, batch - 1}, {0, height - 1}, {0, width - 1}, {0, 11}},
+       {{0, batch - 1}, {0, height - 1}, {0, width - 1}},
+       {{0, batch - 1}, {0, 15}, {0, 15}, {0, 7}, {0, 11}}},
+      options);
 
-  Target target(Target::OS::Windows, Target::Arch::X86, 64,
+  Target target(Target::OS::Linux, Target::Arch::X86, 64,
                 {Target::CUDA, Target::CUDACapability61});
+
+  std::ofstream affine_stream("slice_layer_forward_affine.cpp");
+  Internal::CodeGen_PyTorch pytorch_codegen_affine(
+      affine_stream, target, Internal::CodeGen_PyTorch::PyTorchImplementation,
+      "slice_layer_forward_affine.h");
+  affine.compile_to_static_library("slice_layer_forward_affine", {guide, coeff},
+                                   "slice_layer_forward_affine", target);
+  auto affine_module = affine.compile_to_module(
+      {guide, coeff}, "slice_layer_forward_affine", target);
+  pytorch_codegen_affine.compile(affine_module);
+
   std::ofstream grad_guide_stream("slice_layer_backward_grad_guide.cpp");
   Internal::CodeGen_PyTorch pytorch_codegen_grad_guide(
       grad_guide_stream, target,

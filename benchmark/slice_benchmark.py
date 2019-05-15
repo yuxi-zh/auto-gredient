@@ -3,6 +3,7 @@ import torch
 import time
 import slice
 import sys
+import halideslice
 
 
 class SliceFunction(Function):
@@ -86,3 +87,55 @@ class SliceFunctionBasedCuda(Function):
         coeff, guide = ctx.saved_tensors
         grad_coeff, grad_guide = slice.backward(grad_output, coeff, guide)
         return grad_coeff, grad_guide
+
+
+class SliceFunctionBasedOnGradientHalide(Function):
+
+    @staticmethod
+    def forward(ctx, coeff, guide):
+        ctx.save_for_backward(coeff, guide)
+        return halideslice.forward(coeff, guide)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        coeff, guide = ctx.saved_tensors
+        grad_coeff, grad_guide = halideslice.backward(
+            grad_output, coeff, guide)
+        return grad_coeff, grad_guide
+
+
+def main(argv):
+
+    batch, height, width = int(argv[1]), int(argv[2]), int(argv[3])
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    coeff = torch.randn(batch, 16, 16, 8, 12,
+                        device=device, requires_grad=True)
+    guide = torch.randn(batch, height, width,
+                        device=device, requires_grad=True)
+    grad_output = torch.randn(batch, height, width, 12, device=device)
+
+    SliceFunctionApply = SliceFunction.apply
+    with torch.autograd.profiler.profile(use_cuda=True) as profiler:
+        for _ in range(10):
+            output = SliceFunctionApply(coeff, guide)
+            output.backward(grad_output)
+    print(profiler.key_averages())
+
+    SliceFunctionBasedCudaApply = SliceFunctionBasedCuda.apply
+    with torch.autograd.profiler.profile(use_cuda=True) as profiler:
+        for _ in range(10):
+            output = SliceFunctionBasedCudaApply(coeff, guide)
+            output.backward(grad_output)
+    print(profiler.key_averages())
+
+    SliceFunctionBasedOnGradientHalideApply = SliceFunctionBasedOnGradientHalide.apply
+    with torch.autograd.profiler.profile(use_cuda=True) as profiler:
+        for _ in range(10):
+            output = SliceFunctionBasedOnGradientHalideApply(coeff, guide)
+            output.backward(grad_output)
+    print(profiler.key_averages())
+
+
+if __name__ == "__main__":
+    main(sys.argv)
